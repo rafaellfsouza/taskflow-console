@@ -61,13 +61,21 @@ public class TaskManager
     }
 
     /// <summary>
-    /// Busca uma tarefa pelo Id.
+    /// Busca uma tarefa pelo Id de forma segura.
     /// </summary>
     /// <param name="id">Identificador da tarefa.</param>
-    /// <returns>A tarefa encontrada.</returns>
-    public TaskItem GetTaskById(int id)
+    /// <returns>
+    /// A tarefa encontrada ou <c>null</c> quando não existe nenhuma tarefa com o Id informado.
+    /// </returns>
+    /// <remarks>
+    /// Antes usava o indexador do dicionário (<c>_tasks[id]</c>), que lançava
+    /// <see cref="KeyNotFoundException"/> para Ids inexistentes. Agora usa
+    /// <see cref="Dictionary{TKey,TValue}.TryGetValue"/> e devolve um tipo anulável
+    /// (<c>TaskItem?</c>), tratando a ausência da tarefa com elegância.
+    /// </remarks>
+    public TaskItem? GetTaskById(int id)
     {
-        return _tasks[id];
+        return _tasks.TryGetValue(id, out var task) ? task : null;
     }
 
     /// <summary>Marca a tarefa informada como concluída.</summary>
@@ -75,6 +83,12 @@ public class TaskManager
     public bool Complete(int id)
     {
         var task = GetTaskById(id);
+
+        if (task is null)
+        {
+            return false;
+        }
+
         task.MarkAsCompleted();
 
         return true;
@@ -85,6 +99,12 @@ public class TaskManager
     public bool Toggle(int id)
     {
         var task = GetTaskById(id);
+
+        if (task is null)
+        {
+            return false;
+        }
+
         task.ToggleCompletion();
 
         return true;
